@@ -1,0 +1,1 @@
+curl -i -X POST -H "Content-Type: application/xml" --data @request.xml  https://abcdefgh.execute-api.us-west-2.amazonaws.com/DEV/testxmllambda
