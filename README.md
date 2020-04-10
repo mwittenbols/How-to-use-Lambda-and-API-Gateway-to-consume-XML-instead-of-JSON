@@ -78,188 +78,194 @@ Then, click **Upload** and upload the following ZIP file: [./Source/Lambda/Lambd
 
 The  [./Source/Lambda/Lambda.zip](./Source/Lambda/Lambda.zip) file contains the following ``index.js`` which serves as the handler of the Lambda function:
 		
-	
 	// Let's use the xml2js package to parse our incoming XML to proof we have a proper XML document to work with in Lamda
 	var xml2js = require('xml2js');
-	
+	// Added 2020-04-10: added a library to turn JSON into an XML string again after we added an attribute (just to prove we are working with XML)
+	var jsonxml = require('jsontoxml');
+
 	// Some default settings needed by xml2js. We can leave the as they are.
 	var options = {           // options passed to xml2js parser
-	  explicitCharkey: false, // undocumented
-	  trim: false,            // trim the leading/trailing whitespace from text nodes
-	  normalize: false,       // trim interior whitespace inside text nodes
-	  explicitRoot: false,    // return the root node in the resulting object?
-	  emptyTag: null,         // the default value for empty nodes
-	  explicitArray: true,    // always put child nodes in an array
-	  ignoreAttrs: false,     // ignore attributes, only create text nodes
-	  mergeAttrs: false,      // merge attributes and child elements
-	  validator: null         // a callable validator
+	explicitCharkey: false, // undocumented
+	trim: false,            // trim the leading/trailing whitespace from text nodes
+	normalize: false,       // trim interior whitespace inside text nodes
+	explicitRoot: false,    // return the root node in the resulting object?
+	emptyTag: null,         // the default value for empty nodes
+	explicitArray: true,    // always put child nodes in an array
+	ignoreAttrs: false,     // ignore attributes, only create text nodes
+	mergeAttrs: false,      // merge attributes and child elements
+	validator: null         // a callable validator
 	};
-	
+
 	// Let's change the default handler interface to the following "old" style notation so we have more control with the callback function
 	exports.handler =  (event, context, callback) => {
-	
-	    // Let's create an instance of our xml2js parser
-	    var parser = new xml2js.Parser(options);
-	    // Retrieve the XML from the JSON body that API Gateway is sending because of this Method Execution VTL: { "body" : $input.json('$') }
-	    // Note: So, yes, internally API gateway still uses JSON to wrap around our XML to send it to Lambda. But, the JSON is never visibile to the sender of the API request or the consumer of the response.
-	    var xml = event.body;
-	
-	    // Let's turn the XML into a Javascript object
-	    parser.parseString(xml, function (err, result) {
-	
-	      // If something went wrong, the callback first argument contains the error object that will be sent to API gateway
-	        if (err!=null) {
-	           callback(err, null);
-	        } else {
-	
-	          // For this example, we are expecting an XML request payload in the form of:
-	                    
-	          // <?xml version="1.0"?>
-	          // <catalog>
-	          //    <book id="bk101">
-	          //       <author>Gambardella, Matthew</author>
-	          //       <title>XML Developer's Guide</title>
-	          //       <genre>Computer</genre>
-	          //       <price>44.95</price>
-	          //       <publish_date>2000-10-01</publish_date>
-	          //       <description>An in-depth look at creating applications 
-	          //       with XML.</description>
-	          //    </book>
-	          //    <book id="bk102">
-	          //       <author>Ralls, Kim</author>
-	          //       <title>Midnight Rain</title>
-	          //       <genre>Fantasy</genre>
-	          //       <price>5.95</price>
-	          //       <publish_date>2000-12-16</publish_date>
-	          //       <description>A former architect battles corporate zombies, 
-	          //       an evil sorceress, and her own childhood to become queen 
-	          //       of the world.</description>
-	          //    </book>
-	          //    <book id="bk103">
-	          //       <author>Corets, Eva</author>
-	          //       <title>Maeve Ascendant</title>
-	          //       <genre>Fantasy</genre>
-	          //       <price>5.95</price>
-	          //       <publish_date>2000-11-17</publish_date>
-	          //       <description>After the collapse of a nanotechnology 
-	          //       society in England, the young survivors lay the 
-	          //       foundation for a new society.</description>
-	          //    </book>
-	          //    <book id="bk104">
-	          //       <author>Corets, Eva</author>
-	          //       <title>Oberon's Legacy</title>
-	          //       <genre>Fantasy</genre>
-	          //       <price>5.95</price>
-	          //       <publish_date>2001-03-10</publish_date>
-	          //       <description>In post-apocalypse England, the mysterious 
-	          //       agent known only as Oberon helps to create a new life 
-	          //       for the inhabitants of London. Sequel to Maeve 
-	          //       Ascendant.</description>
-	          //    </book>
-	          //    <book id="bk105">
-	          //       <author>Corets, Eva</author>
-	          //       <title>The Sundered Grail</title>
-	          //       <genre>Fantasy</genre>
-	          //       <price>5.95</price>
-	          //       <publish_date>2001-09-10</publish_date>
-	          //       <description>The two daughters of Maeve, half-sisters, 
-	          //       battle one another for control of England. Sequel to 
-	          //       Oberon's Legacy.</description>
-	          //    </book>
-	          //    <book id="bk106">
-	          //       <author>Randall, Cynthia</author>
-	          //       <title>Lover Birds</title>
-	          //       <genre>Romance</genre>
-	          //       <price>4.95</price>
-	          //       <publish_date>2000-09-02</publish_date>
-	          //       <description>When Carla meets Paul at an ornithology 
-	          //       conference, tempers fly as feathers get ruffled.</description>
-	          //    </book>
-	          //    <book id="bk107">
-	          //       <author>Thurman, Paula</author>
-	          //       <title>Splish Splash</title>
-	          //       <genre>Romance</genre>
-	          //       <price>4.95</price>
-	          //       <publish_date>2000-11-02</publish_date>
-	          //       <description>A deep sea diver finds true love twenty 
-	          //       thousand leagues beneath the sea.</description>
-	          //    </book>
-	          //    <book id="bk108">
-	          //       <author>Knorr, Stefan</author>
-	          //       <title>Creepy Crawlies</title>
-	          //       <genre>Horror</genre>
-	          //       <price>4.95</price>
-	          //       <publish_date>2000-12-06</publish_date>
-	          //       <description>An anthology of horror stories about roaches,
-	          //       centipedes, scorpions  and other insects.</description>
-	          //    </book>
-	          //    <book id="bk109">
-	          //       <author>Kress, Peter</author>
-	          //       <title>Paradox Lost</title>
-	          //       <genre>Science Fiction</genre>
-	          //       <price>6.95</price>
-	          //       <publish_date>2000-11-02</publish_date>
-	          //       <description>After an inadvertant trip through a Heisenberg
-	          //       Uncertainty Device, James Salway discovers the problems 
-	          //       of being quantum.</description>
-	          //    </book>
-	          //    <book id="bk110">
-	          //       <author>O'Brien, Tim</author>
-	          //       <title>Microsoft .NET: The Programming Bible</title>
-	          //       <genre>Computer</genre>
-	          //       <price>36.95</price>
-	          //       <publish_date>2000-12-09</publish_date>
-	          //       <description>Microsoft's .NET initiative is explored in 
-	          //       detail in this deep programmer's reference.</description>
-	          //    </book>
-	          //    <book id="bk111">
-	          //       <author>O'Brien, Tim</author>
-	          //       <title>MSXML3: A Comprehensive Guide</title>
-	          //       <genre>Computer</genre>
-	          //       <price>36.95</price>
-	          //       <publish_date>2000-12-01</publish_date>
-	          //       <description>The Microsoft MSXML3 parser is covered in 
-	          //       detail, with attention to XML DOM interfaces, XSLT processing, 
-	          //       SAX and more.</description>
-	          //    </book>
-	          //    <book id="bk112">
-	          //       <author>Galos, Mike</author>
-	          //       <title>Visual Studio 7: A Comprehensive Guide</title>
-	          //       <genre>Computer</genre>
-	          //       <price>49.95</price>
-	          //       <publish_date>2001-04-16</publish_date>
-	          //       <description>Microsoft Visual Studio 7 is explored in depth,
-	          //       looking at how Visual Basic, Visual C++, C#, and ASP+ are 
-	          //       integrated into a comprehensive development 
-	          //       environment.</description>
-	          //    </book>
-	          // </catalog>          
-	          
-	          // Now, send a dummy XML string back, but add an XML attribute of the incoming request so we proof that the incoming request was actually parsed as an XML document
-	          var xmlString = result.Catalog[0];
-	
-	          // Now prepare the response object
-	          var resp = {
-	              // Return this as a successful "200" response
-	              statusCode: 200,
-	              headers: {
-	                  // Note: This Content-Type corresponds to the Content-Type added as Mapping Template in the Integration Response of the API in API Gateway
-	                  'Content-Type': 'text/xml'
-	              },
-	              // Note: This body attribute is what the text/xml Mapping Template of the Integration Response refers to when it executes the following VTL:
-	              
-	              // #set($inputRoot = $input.path('$.body'))
-	              // $inputRoot
-	
-	              body: xmlString
-	          }
-	          
-	          // Now, call the callback with the response above
-	          callback(null, resp)
-	            
-	        }
-	    });
-	
+
+		// Let's create an instance of our xml2js parser
+		var parser = new xml2js.Parser(options);
+		// Retrieve the XML from the JSON body that API Gateway is sending because of this Method Execution VTL: { "body" : $input.json('$') }
+		// Note: So, yes, internally API gateway still uses JSON to wrap around our XML to send it to Lambda. But, the JSON is never visibile to the sender of the API request or the consumer of the response.
+		var xml = event.body;
+
+		// Let's turn the XML into a Javascript object
+		parser.parseString(xml, function (err, result) {
+
+		// If something went wrong, the callback first argument contains the error object that will be sent to API gateway
+			if (err!=null) {
+			callback(err, null);
+			} else {
+
+			// For this example, we are expecting an XML request payload in the form of:
+						
+			// <?xml version="1.0"?>
+			// <catalog>
+			//    <book id="bk101">
+			//       <author>Gambardella, Matthew</author>
+			//       <title>XML Developer's Guide</title>
+			//       <genre>Computer</genre>
+			//       <price>44.95</price>
+			//       <publish_date>2000-10-01</publish_date>
+			//       <description>An in-depth look at creating applications 
+			//       with XML.</description>
+			//    </book>
+			//    <book id="bk102">
+			//       <author>Ralls, Kim</author>
+			//       <title>Midnight Rain</title>
+			//       <genre>Fantasy</genre>
+			//       <price>5.95</price>
+			//       <publish_date>2000-12-16</publish_date>
+			//       <description>A former architect battles corporate zombies, 
+			//       an evil sorceress, and her own childhood to become queen 
+			//       of the world.</description>
+			//    </book>
+			//    <book id="bk103">
+			//       <author>Corets, Eva</author>
+			//       <title>Maeve Ascendant</title>
+			//       <genre>Fantasy</genre>
+			//       <price>5.95</price>
+			//       <publish_date>2000-11-17</publish_date>
+			//       <description>After the collapse of a nanotechnology 
+			//       society in England, the young survivors lay the 
+			//       foundation for a new society.</description>
+			//    </book>
+			//    <book id="bk104">
+			//       <author>Corets, Eva</author>
+			//       <title>Oberon's Legacy</title>
+			//       <genre>Fantasy</genre>
+			//       <price>5.95</price>
+			//       <publish_date>2001-03-10</publish_date>
+			//       <description>In post-apocalypse England, the mysterious 
+			//       agent known only as Oberon helps to create a new life 
+			//       for the inhabitants of London. Sequel to Maeve 
+			//       Ascendant.</description>
+			//    </book>
+			//    <book id="bk105">
+			//       <author>Corets, Eva</author>
+			//       <title>The Sundered Grail</title>
+			//       <genre>Fantasy</genre>
+			//       <price>5.95</price>
+			//       <publish_date>2001-09-10</publish_date>
+			//       <description>The two daughters of Maeve, half-sisters, 
+			//       battle one another for control of England. Sequel to 
+			//       Oberon's Legacy.</description>
+			//    </book>
+			//    <book id="bk106">
+			//       <author>Randall, Cynthia</author>
+			//       <title>Lover Birds</title>
+			//       <genre>Romance</genre>
+			//       <price>4.95</price>
+			//       <publish_date>2000-09-02</publish_date>
+			//       <description>When Carla meets Paul at an ornithology 
+			//       conference, tempers fly as feathers get ruffled.</description>
+			//    </book>
+			//    <book id="bk107">
+			//       <author>Thurman, Paula</author>
+			//       <title>Splish Splash</title>
+			//       <genre>Romance</genre>
+			//       <price>4.95</price>
+			//       <publish_date>2000-11-02</publish_date>
+			//       <description>A deep sea diver finds true love twenty 
+			//       thousand leagues beneath the sea.</description>
+			//    </book>
+			//    <book id="bk108">
+			//       <author>Knorr, Stefan</author>
+			//       <title>Creepy Crawlies</title>
+			//       <genre>Horror</genre>
+			//       <price>4.95</price>
+			//       <publish_date>2000-12-06</publish_date>
+			//       <description>An anthology of horror stories about roaches,
+			//       centipedes, scorpions  and other insects.</description>
+			//    </book>
+			//    <book id="bk109">
+			//       <author>Kress, Peter</author>
+			//       <title>Paradox Lost</title>
+			//       <genre>Science Fiction</genre>
+			//       <price>6.95</price>
+			//       <publish_date>2000-11-02</publish_date>
+			//       <description>After an inadvertant trip through a Heisenberg
+			//       Uncertainty Device, James Salway discovers the problems 
+			//       of being quantum.</description>
+			//    </book>
+			//    <book id="bk110">
+			//       <author>O'Brien, Tim</author>
+			//       <title>Microsoft .NET: The Programming Bible</title>
+			//       <genre>Computer</genre>
+			//       <price>36.95</price>
+			//       <publish_date>2000-12-09</publish_date>
+			//       <description>Microsoft's .NET initiative is explored in 
+			//       detail in this deep programmer's reference.</description>
+			//    </book>
+			//    <book id="bk111">
+			//       <author>O'Brien, Tim</author>
+			//       <title>MSXML3: A Comprehensive Guide</title>
+			//       <genre>Computer</genre>
+			//       <price>36.95</price>
+			//       <publish_date>2000-12-01</publish_date>
+			//       <description>The Microsoft MSXML3 parser is covered in 
+			//       detail, with attention to XML DOM interfaces, XSLT processing, 
+			//       SAX and more.</description>
+			//    </book>
+			//    <book id="bk112">
+			//       <author>Galos, Mike</author>
+			//       <title>Visual Studio 7: A Comprehensive Guide</title>
+			//       <genre>Computer</genre>
+			//       <price>49.95</price>
+			//       <publish_date>2001-04-16</publish_date>
+			//       <description>Microsoft Visual Studio 7 is explored in depth,
+			//       looking at how Visual Basic, Visual C++, C#, and ASP+ are 
+			//       integrated into a comprehensive development 
+			//       environment.</description>
+			//    </book>
+			// </catalog>          
+			
+			// Now, send a dummy XML string back, but add an XML attribute of the incoming request so we proof that the incoming request was actually parsed as an XML document
+			// Modified 2020-04-10: added jsonxml() method to actually convert the JSON object back to an XML string!
+			result.book[0]["newAttribute"] = "test";
+			// Take the first book and return that to show we added a new attribute, and to show that we can return an XML string as an XML content-type
+			var xmlString = jsonxml(result.book[0], {
+				xmlHeader: true
+			});     
+
+			// Now prepare the response object
+			var resp = {
+				// Return this as a successful "200" response
+				statusCode: 200,
+				headers: {
+					// Note: This Content-Type corresponds to the Content-Type added as Mapping Template in the Integration Response of the API in API Gateway
+					'Content-Type': 'text/xml'
+				},
+				// Note: This body attribute is what the text/xml Mapping Template of the Integration Response refers to when it executes the following VTL:
+				
+				// #set($inputRoot = $input.path('$.body'))
+				// $inputRoot
+
+				body: xmlString
+			}
+			
+			// Now, call the callback with the response above
+			callback(null, resp)
+				
+			}
+		});
+
 	};
 
 
@@ -299,23 +305,23 @@ You should see the following output:
 	  "headers": {
 	    "Content-Type": "text/xml"
 	  },
-	  "body": "<?xml version="1.0" encoding="UTF-8"?> <book id="bk102"> <author>Ralls, Kim</author> <title>Midnight Rain</title> <genre>Fantasy</genre> <price>5.95</price> <publish_date>2000-12-16</publish_date> <description>A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description> </book>"
+	  "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><$><id>bk101</id></$><author>Gambardella, Matthew</author><title>XML Developer's Guide</title><genre>Computer</genre><price>44.95</price><publish_date>2000-10-01</publish_date><description>An in-depth look at creating applications with XML.</description><newAttribute>test</newAttribute>"
 	}
 
-Notice how the XML element was taken from the original XML request:
+Notice how the XML element was taken from the original XML request, with a new attribute added:
 
-	<book id="bk102">
-      <author>Ralls, Kim</author>
-      <title>Midnight Rain</title>
-      <genre>Fantasy</genre>
-      <price>5.95</price>
-      <publish_date>2000-12-16</publish_date>
-      <description>A former architect battles corporate zombies, 
-      an evil sorceress, and her own childhood to become queen 
-      of the world.</description>
-	</book>
+	<$><id>bk101</id></$>
+	<author>Ralls, Kim</author>
+	<title>Midnight Rain</title>
+	<genre>Fantasy</genre>
+	<price>5.95</price>
+	<publish_date>2000-12-16</publish_date>
+	<description>A former architect battles corporate zombies, 
+	an evil sorceress, and her own childhood to become queen 
+	of the world.</description>
+	<newAttribute>test</newAttribute>
 
-This confirms that we successfully parse the XML document that we used for testing the Lambda function.
+This confirms that we successfully parsed the XML document that we used for testing the Lambda function.
 
 ## Step 3. Create the API in API Gateway
 
@@ -505,20 +511,20 @@ Then, the result we should see appear is the following:
 	X-Amzn-Trace-Id: Root=1-5d9f6d74-ce4acd82061fc4b4bca80e06;Sampled=0
 	
 	;
-	<?xml version="1.0" encoding="UTF-8"?> <book id="bk102"> <author>Ralls, Kim</author> <title>Midnight Rain</title> <genre>Fantasy</genre> <price>5.95</price> <publish_date>2000-12-16</publish_date> <description>A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description> </book>
+	<?xml version="1.0" encoding="utf-8"?><$><id>bk101</id></$><author>Gambardella, Matthew</author><title>XML Developer's Guide</title><genre>Computer</genre><price>44.95</price><publish_date>2000-10-01</publish_date><description>An in-depth look at creating applications with XML.</description><newAttribute>test</newAttribute> 
 
 And there we have it, if you look closely you can see not only a proper XML response, but also part of the parsed XML request payload:
 	
-	<book id="bk102">
-	      <author>Ralls, Kim</author>
-	      <title>Midnight Rain</title>
-	      <genre>Fantasy</genre>
-	      <price>5.95</price>
-	      <publish_date>2000-12-16</publish_date>
-	      <description>A former architect battles corporate zombies, 
-	      an evil sorceress, and her own childhood to become queen 
-	      of the world.</description>
-	</book>
+	<$><id>bk101</id></$>
+	<author>Ralls, Kim</author>
+	<title>Midnight Rain</title>
+	<genre>Fantasy</genre>
+	<price>5.95</price>
+	<publish_date>2000-12-16</publish_date>
+	<description>A former architect battles corporate zombies, 
+	an evil sorceress, and her own childhood to become queen 
+	of the world.</description>
+	<newAttribute>test</newAttribute>
 
 **Note:** notice how are both our request payload and reponse body are actual XML objects with a proper ``xml`` content-type.
 
@@ -537,6 +543,7 @@ In this lab we showed you how you can create an API with AWS API Gateway and Lam
 | Version | Date          		| Comments        |
 | ------- | ------------------- | --------------- |
 | 1.0     | Oct 9, 2019   | Initial release |
+| 1.1     | April 10, 2020   | Bugfix, as the sample wasn't working properly. Thanks to Ramesh Patel |
 
 ## Disclaimer ##
 **THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
