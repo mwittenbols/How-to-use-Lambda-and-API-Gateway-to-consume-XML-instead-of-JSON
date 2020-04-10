@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "jsontoxml": "^1.0.1",
     "xml2js": "^0.4.22"
   }
 }

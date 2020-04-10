@@ -1,5 +1,7 @@
 // Let's use the xml2js package to parse our incoming XML to proof we have a proper XML document to work with in Lamda
 var xml2js = require('xml2js');
+// Added 2020-04-10: added a library to turn JSON into an XML string again after we added an attribute (just to prove we are working with XML)
+var jsonxml = require('jsontoxml');
 
 // Some default settings needed by xml2js. We can leave the as they are.
 var options = {           // options passed to xml2js parser
@@ -155,7 +157,12 @@ exports.handler =  (event, context, callback) => {
           // </catalog>          
           
           // Now, send a dummy XML string back, but add an XML attribute of the incoming request so we proof that the incoming request was actually parsed as an XML document
-          var xmlString = result.Catalog[0];
+          // Modified 2020-04-10: added jsonxml() method to actually convert the JSON object back to an XML string!
+          result.book[0]["newAttribute"] = "test";
+          // Take the first book and return that to show we added a new attribute, and to show that we can return an XML string as an XML content-type
+          var xmlString = jsonxml(result.book[0], {
+            xmlHeader: true
+          });     
 
           // Now prepare the response object
           var resp = {
