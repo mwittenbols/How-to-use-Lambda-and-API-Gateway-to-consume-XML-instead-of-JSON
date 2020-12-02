@@ -1,4 +1,6 @@
-# How to use Lambda and API Gateway to consume XML instead of JSON
+# How to use Lambda and API Gateway to consume XML instead of JSON (UPDATE: DEC 2nd, 2020)
+
+**IMPORTANT UPDATE/BUGFIX:** Trailing semi-color ; now removed from response due to typo in VTL template! Thanks to Parth Srivastava @parthsr!
 
 In this lab I will guide you through the process of creating an API with AWS API Gateway and Lambda to consume an XML body and response with an XML body, without the need the use JSON in your request or response.
 
@@ -433,9 +435,25 @@ Then, type ``text/xml`` as **Content-Type** and click the tiny checkmark icon.
 
 Then, copy and paste the following VTL code block in the text editor:
 
-	#set($inputRoot = $input.path('$.body')); 
+	#set($inputRoot = $input.path('$.body'))
 	$inputRoot
+
+**2020-12-02 IMPORTANT UPDATE!!**
   
+Sorry, previously the VTL mapping template we provided had a trailing semi-colon, which became part of the response, but you don't need that there!!
+
+So this is WRONG:
+
+	#set($inputRoot = $input.path('$.body'));
+	$inputRoot
+
+So this is CORRECT:
+
+	#set($inputRoot = $input.path('$.body'))
+	$inputRoot
+
+**END OF 2020-12-02 UPDATE**
+
 Then, click **Save** at the bottom AND then click **Save again** at the top.
 
 ## Step 6. Configure Method Response
@@ -499,6 +517,12 @@ Or, download and execute the supplied Windows CMD files for your convenience:
 
 Or, paste the XML body from [request.xml](./Source/cURL/request.xml)  into a Postman API call.
 
+**2020-12-02 IMPORTANT UPDATE!!**
+  
+Sorry, previously the VTL mapping template we provided had a trailing semi-colon, which became part of the response, but after removing it from the VTL (see above) the reponse is now clean XML.
+
+**2020-12-02 END OF UPDATE**
+
 Then, the result we should see appear is the following:
 	
 	HTTP/1.1 200 OK
@@ -510,7 +534,6 @@ Then, the result we should see appear is the following:
 	x-amz-apigw-id: BW4KSHPePHcFaDg=
 	X-Amzn-Trace-Id: Root=1-5d9f6d74-ce4acd82061fc4b4bca80e06;Sampled=0
 	
-	;
 	<?xml version="1.0" encoding="utf-8"?><$><id>bk101</id></$><author>Gambardella, Matthew</author><title>XML Developer's Guide</title><genre>Computer</genre><price>44.95</price><publish_date>2000-10-01</publish_date><description>An in-depth look at creating applications with XML.</description><newAttribute>test</newAttribute> 
 
 And there we have it, if you look closely you can see not only a proper XML response, but also part of the parsed XML request payload:
@@ -544,11 +567,10 @@ In this lab we showed you how you can create an API with AWS API Gateway and Lam
 | ------- | ------------------- | --------------- |
 | 1.0     | Oct 9, 2019   | Initial release |
 | 1.1     | April 10, 2020   | Bugfix, as the sample wasn't working properly. Thanks to Ramesh Patel |
+| 1.2     | December 2, 2020   | Bugfix, trailing semi-colon showed up in the results due to wrong VTL, Thanks to Parth Srivastava @parthsr |
 
 ## Disclaimer ##
 **THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
-
-
 
 
 
